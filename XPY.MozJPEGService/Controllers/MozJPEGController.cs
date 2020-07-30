@@ -10,13 +10,47 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Threading;
+using XPY.MozJPEGService.Models;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace XPY.MozJPEGService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MozJPEGController : ControllerBase
+    public class MozJPEGController : Controller
     {
+        public static long InProcessing = 0;
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            if ((context.ActionDescriptor as ControllerActionDescriptor)?.ControllerName == "MozJPEG" &&
+                (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName == nameof(Convert))
+            {
+                Interlocked.Increment(ref InProcessing);
+            }
+            base.OnActionExecuting(context);
+        }
+
+        public override void OnActionExecuted(ActionExecutedContext context)
+        {
+            if ((context.ActionDescriptor as ControllerActionDescriptor)?.ControllerName == "MozJPEG" &&
+                (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName == nameof(Convert))
+            {
+                Interlocked.Decrement(ref InProcessing);
+            }
+            base.OnActionExecuted(context);
+        }
+
+        [HttpGet]
+        public async Task<ConvertStatus> Get()
+        {
+            return new ConvertStatus() {
+                InProcessing = InProcessing
+            };
+        }
+
         [HttpPost]
         public async Task<IActionResult> Convert(
             IFormFile file,
@@ -25,6 +59,7 @@ namespace XPY.MozJPEGService.Controllers
             [FromForm] bool padMode = false,
             [FromForm] string padColor = "#000"
         ) {
+            await Task.Delay(1000 * 5);
             var exe = Cli.Wrap("/opt/mozjpeg/bin/cjpeg");
             
             var tempInputFilePath = Guid.NewGuid() + ".jpg";
