@@ -12,42 +12,22 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Threading;
+using System.Collections.Concurrent;
 using XPY.MozJPEGService.Models;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace XPY.MozJPEGService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class MozJPEGController : Controller
-    {
-        public static long InProcessing = 0;
-
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
-            if ((context.ActionDescriptor as ControllerActionDescriptor)?.ControllerName == "MozJPEG" &&
-                (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName == nameof(Convert))
-            {
-                Interlocked.Increment(ref InProcessing);
-            }
-            base.OnActionExecuting(context);
-        }
-
-        public override void OnActionExecuted(ActionExecutedContext context)
-        {
-            if ((context.ActionDescriptor as ControllerActionDescriptor)?.ControllerName == "MozJPEG" &&
-                (context.ActionDescriptor as ControllerActionDescriptor)?.ActionName == nameof(Convert))
-            {
-                Interlocked.Decrement(ref InProcessing);
-            }
-            base.OnActionExecuted(context);
-        }
-
+    { 
         [HttpGet]
         public async Task<ConvertStatus> Get()
         {
             return new ConvertStatus() {
-                InProcessing = InProcessing
+                InProcessing = QueueAsyncActionFilter.Queue.Count
             };
         }
 
