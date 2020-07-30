@@ -59,7 +59,6 @@ namespace XPY.MozJPEGService.Controllers
             [FromForm] bool padMode = false,
             [FromForm] string padColor = "#000"
         ) {
-            await Task.Delay(1000 * 5);
             var exe = Cli.Wrap("/opt/mozjpeg/bin/cjpeg");
             
             var tempInputFilePath = Guid.NewGuid() + ".jpg";
