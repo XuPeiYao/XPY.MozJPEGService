@@ -10,6 +10,7 @@ RUN wget https://mozjpeg.codelove.de/bin/mozjpeg_3.3.1_amd64.deb
 RUN dpkg -i mozjpeg_3.3.1_amd64.deb
 
 RUN apt install -y libpng16-16
+RUN apt install -y libgdiplus
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src

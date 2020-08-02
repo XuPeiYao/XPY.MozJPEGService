@@ -16,11 +16,13 @@ using System.Collections.Concurrent;
 using XPY.MozJPEGService.Models;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Drawing.Blurhash;
 
 namespace XPY.MozJPEGService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class MozJPEGController : Controller
     { 
         [HttpGet]
@@ -29,6 +31,19 @@ namespace XPY.MozJPEGService.Controllers
             return new ConvertStatus() {
                 InProcessing = QueueAsyncActionFilter.Queue.Count
             };
+        }
+
+        [HttpPost("blurhash")]
+        public async Task<string> BlurHash(IFormFile file)
+        { 
+            var encoder = new Encoder();
+            using (var uploadStream = file.OpenReadStream())
+            using (var image = System.Drawing.Image.FromStream(uploadStream))
+            {
+                var rate = ((double)image.Height / image.Width);
+
+                return encoder.Encode(image, 4, (int)Math.Round(4 * rate));
+            }  
         }
 
         [HttpPost]
