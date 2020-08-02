@@ -17,6 +17,7 @@ using XPY.MozJPEGService.Models;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using System.Drawing.Blurhash;
+using System.IO;
 
 namespace XPY.MozJPEGService.Controllers
 {
@@ -38,11 +39,19 @@ namespace XPY.MozJPEGService.Controllers
         { 
             var encoder = new Encoder();
             using (var uploadStream = file.OpenReadStream())
-            using (var image = System.Drawing.Image.FromStream(uploadStream))
+            using (var image = Image.Load(uploadStream))
+            using (var outputStream = new MemoryStream())
             {
                 var rate = ((double)image.Height / image.Width);
+                image.Mutate(x => x.Resize(40, (int)Math.Round(40 * rate)));
 
-                return encoder.Encode(image, 4, (int)Math.Round(4 * rate));
+                image.SaveAsJpeg(outputStream);
+                outputStream.Seek(0, SeekOrigin.Begin);
+
+                using (var systemImage = System.Drawing.Image.FromStream(outputStream))
+                {
+                    return encoder.Encode(systemImage, 4, (int)Math.Round(4 * rate));
+                }
             }  
         }
 
