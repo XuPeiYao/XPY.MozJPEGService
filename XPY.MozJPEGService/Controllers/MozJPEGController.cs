@@ -36,7 +36,7 @@ namespace XPY.MozJPEGService.Controllers
 
         [HttpPost("blurhash")]
         public async Task<string> BlurHash(IFormFile file)
-        { 
+        {
             var encoder = new Encoder();
             using (var uploadStream = file.OpenReadStream())
             using (var image = Image.Load(uploadStream))
